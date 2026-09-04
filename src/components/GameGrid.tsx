@@ -15,7 +15,6 @@ const GameGrid = () => {
     data,
     error,
     isLoading,
-    isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
   } = useGames();
