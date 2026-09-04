@@ -12,6 +12,7 @@ const useData = <T>(endpoint: string, requestConfig?: AxiosRequestConfig, deps: 
     const controller = new AbortController();
     const apiClient = new APIClient<T>(endpoint);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
     apiClient
@@ -36,6 +37,7 @@ const useData = <T>(endpoint: string, requestConfig?: AxiosRequestConfig, deps: 
       });
 
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return {

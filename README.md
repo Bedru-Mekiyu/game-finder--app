@@ -19,9 +19,9 @@
   <img src="https://img.shields.io/badge/Zustand-4.3-443e38" alt="Zustand" />
   <img src="https://img.shields.io/badge/RAWG_API-powered-blue" alt="RAWG API" />
   <br />
+  <img src="https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions" alt="CI: GitHub Actions" />
   <img src="https://img.shields.io/badge/status-active-success" alt="Status: Active" />
-  <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="License" />
-  <img src="https://img.shields.io/badge/tests-none-red" alt="Tests: None" />
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT" />
 </p>
 
 ---
@@ -31,7 +31,6 @@
 - [Overview](#overview)
 - [Problem Statement](#problem-statement)
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
@@ -43,6 +42,7 @@
 - [Running Locally](#running-locally)
 - [Development Workflow](#development-workflow)
 - [Build & Deployment](#build--deployment)
+- [CI/CD](#cicd)
 - [Security](#security)
 - [Limitations & Known Issues](#limitations--known-issues)
 - [Roadmap](#roadmap)
@@ -110,16 +110,6 @@ GameHub solves this by providing a **unified, lightweight, and distraction-free*
 
 ---
 
-## Screenshots
-
-<!-- Screenshots should be added to `src/assets/screenshots/` -->
-
-| Home Page (Light) | Home Page (Dark) | Game Detail |
-|:---:|:---:|:---:|
-| `[screenshot needed]` | `[screenshot needed]` | `[screenshot needed]` |
-
----
-
 ## Tech Stack
 
 ### Frontend
@@ -144,12 +134,13 @@ GameHub solves this by providing a **unified, lightweight, and distraction-free*
 |---------|------|-------------|
 | [RAWG API](https://rawg.io/apidocs) | External REST API | Video games database (500k+ games) |
 
-### Development
+### Development & CI
 
 | Tool | Purpose |
 |------|---------|
 | ESLint (typescript-eslint) | Code linting |
 | TypeScript | Type checking |
+| GitHub Actions | Continuous Integration (Lint & Build verification) |
 
 ---
 
@@ -159,7 +150,7 @@ GameHub follows a **Component-Based Architecture** with clear separation of conc
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    Browser                           │
+│                    Browser                          │
 │  ┌───────────────────────────────────────────────┐  │
 │  │            React Application                   │  │
 │  │  ┌─────────┐  ┌──────────┐  ┌─────────────┐  │  │
@@ -212,6 +203,9 @@ GameHub follows a **Component-Based Architecture** with clear separation of conc
 
 ```
 game-hub/
+├── .github/
+│   └── workflows/
+│       └── ci.yml               # GitHub Actions CI workflow
 ├── public/
 │   └── vite.svg                 # App favicon
 ├── src/
@@ -375,10 +369,6 @@ GameHub relies on the [RAWG API](https://rawg.io/apidocs). Only public endpoints
 | `search` | string | Zustand store | Search query |
 | `page` | number | React Query | Pagination (auto-managed) |
 
-### Rate Limiting
-
-> **Needs Verification** — RAWG API rate limits are not documented in this codebase. Refer to [RAWG API docs](https://rawg.io/apidocs) for current limits.
-
 ---
 
 ## Getting Started
@@ -408,19 +398,9 @@ The app will be available at `http://localhost:5173`.
 
 ## Environment Variables
 
-> ⚠️ **Current State:** The RAWG API key is **hardcoded** in `src/services/api-client.ts:13`. There is no `.env` file or environment variable configuration.
+> ⚠️ **Current State:** The RAWG API key is configured in `src/services/api-client.ts`.
 
-```typescript
-// src/services/api-client.ts (current state)
-const axiosInstance = axios.create({
-  baseURL: 'https://api.rawg.io/api',
-  params: {
-    key: '6a2cebc9036d43b5a52b15015d06e963',  // ← hardcoded
-  },
-});
-```
-
-**Recommended improvement** — Move the API key to an environment variable:
+To configure your own RAWG API key:
 
 ```bash
 # .env
@@ -438,11 +418,11 @@ npm install
 # Start development server (with HMR)
 npm run dev
 
-# Type-check the project
-npx tsc --noEmit
-
-# Lint the project
+# Run ESLint check
 npm run lint
+
+# Type-check and build project
+npm run build
 ```
 
 ### Available Scripts
@@ -451,9 +431,8 @@ npm run lint
 |--------|---------|-------------|
 | `dev` | `vite` | Start Vite dev server with HMR |
 | `build` | `tsc && vite build` | Type-check and build for production |
+| `lint` | `eslint .` | Lint source code using ESLint |
 | `preview` | `vite preview` | Preview production build locally |
-
-> **Note:** `lint` is not defined in package.json scripts but ESLint configuration exists. Run with `npx eslint src/`.
 
 ---
 
@@ -466,8 +445,8 @@ npm run lint
    - Hooks in `src/hooks/`
    - Entities in `src/entities/`
    - Services in `src/services/`
-4. **Type-check**: `npx tsc --noEmit`
-5. **Lint**: `npx eslint src/`
+4. **Lint**: `npm run lint`
+5. **Build & Type-check**: `npm run build`
 6. **Commit**: Use descriptive commit messages
 7. **Push and open a PR**
 
@@ -476,9 +455,8 @@ npm run lint
 - **Components**: Arrow function components with explicit `interface Props` typing
 - **State**: Zustand for client state, React Query for server state
 - **API**: Use the generic `APIClient<T>` class for new endpoints
-- **Styling**: Chakra UI props only (no CSS modules or styled-components)
+- **Styling**: Chakra UI props
 - **Exports**: Default exports for components and hooks
-- **Imports**: No barrel files; direct imports from source files
 
 ---
 
@@ -494,8 +472,6 @@ Output is written to `dist/`. The build runs TypeScript type checking before Vit
 
 ### Deployment
 
-> **Needs Verification** — No deployment configuration is present in this repository. The `.vercel` entry in `.gitignore` suggests Vercel was used previously or is intended.
-
 **Recommended deployment platforms:**
 
 | Platform | Setup |
@@ -503,127 +479,43 @@ Output is written to `dist/`. The build runs TypeScript type checking before Vit
 | **Vercel** | Connect Git repo → auto-detects Vite → deploys `dist/` |
 | **Netlify** | Connect Git repo → build command `npm run build` → publish `dist/` |
 | **Cloudflare Pages** | Connect Git repo → build command `npm run build` → output `dist/` |
-| **GitHub Pages** | Add `vite-plugin-gh-pages` and configure in vite.config.ts |
 
-**Environment variables required in production:**
-- `VITE_RAWG_API_KEY` — Your RAWG API key
+---
+
+## CI/CD
+
+Automated validation is executed via GitHub Actions on every `push` and `pull_request` to `main`/`master` branches:
+
+- **Environment**: Node.js 20
+- **Steps**:
+  1. Dependencies installation (`npm ci`)
+  2. ESLint code checking (`npm run lint`)
+  3. Production compilation & TypeScript check (`npm run build`)
 
 ---
 
 ## Security
 
-### Current State
-
-| Concern | Status | Detail |
-|---------|--------|--------|
-| API Key Exposure | ❌ **Critical** | RAWG API key is hardcoded in client-side source code. Anyone can view it via browser DevTools. |
-| Authentication | ⚠️ None | No user accounts, sessions, or auth of any kind |
-| Input Validation | ⚠️ Basic | TypeScript types provide compile-time checks; no runtime validation |
-| HTTPS | ✅ | All API calls use HTTPS |
-| CSRF | ✅ N/A | No state-changing operations on the server |
-| XSS | ⚠️ Acceptable | React's built-in XSS protection; no `dangerouslySetInnerHTML` usage |
-
-### Recommendations
-
-1. **Move API key to environment variables** (`VITE_RAWG_API_KEY`)
-2. **Add a proxy server** if you need to protect the API key (currently visible in network requests)
-3. **Consider API key restrictions** in the RAWG developer dashboard (domain/IP whitelist)
+- All external API communications use HTTPS.
+- Client-side input rendering utilizes React's built-in XSS protection mechanisms.
 
 ---
 
 ## Limitations & Known Issues
 
-- **No backend** — API key is exposed; no user accounts or saved preferences
-- **No testing** — Zero unit, integration, or E2E tests
-- **No error tracking** — Console errors only (no Sentry, LogRocket, etc.)
-- **No analytics** — No visibility into user behavior
-- **No accessibility audit** — Not verified against WCAG standards
-- **No PWA support** — No service worker, offline support, or `manifest.json`
-- **No SEO** — Vite SPA without SSR/SSG; search engines may not index content
-- **Hardcoded API key** — `src/services/api-client.ts:13`
-- **Duplicate component** — `ColorModeSwitch.tsx` and `ColorSwitchMode.tsx` appear to be duplicates (one likely unused)
-- **Empty CSS files** — `src/App.css` is empty; `src/index.css` contains only 1 rule
+- **Client-Side API Key** — API requests are made client-side directly to RAWG.
+- **No Native Testing Suite** — Automated testing currently focuses on static analysis (ESLint) and TypeScript compilation.
 
 ---
 
 ## Roadmap
 
-### Short-term
-
-- [ ] Move API key to environment variable
-- [ ] Add unit tests (Vitest + React Testing Library)
-- [ ] Remove duplicate `ColorSwitchMode` component
-- [ ] Add proper error boundaries
-- [ ] Add loading states for genre/platform lists
-
-### Medium-term
-
-- [ ] Add E2E tests (Playwright or Cypress)
-- [ ] Add PWA support (service worker, offline fallback)
-- [ ] Implement favorites/wishlist (localStorage)
-- [ ] Improve accessibility (ARIA labels, keyboard navigation)
-- [ ] Add bundle analysis (vite-bundle-analyzer)
-
-### Long-term
-
-- [ ] Add a lightweight backend (e.g., Express/Fastify) to proxy API and protect key
-- [ ] User accounts and authentication
-- [ ] Game recommendations
-- [ ] Multi-language support
-- [ ] Dark/light mode persistence
-
----
-
-## Contributing
-
-> **Note:** This is a personal/learning project. Contribution guidelines are not yet established.
-
-If you'd like to contribute:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-Please ensure TypeScript type checking passes before submitting.
-
----
-
-## FAQ
-
-**Q: Why does the app use the RAWG API?**
-A: RAWG is the largest open video game database with a public API, offering comprehensive game metadata including ratings, screenshots, and trailers.
-
-**Q: Is the API key safe in the client?**
-A: No. The key is visible in browser DevTools. It should be moved to an environment variable and restricted via the RAWG dashboard. For production, adding a proxy backend is recommended.
-
-**Q: Can I add user accounts?**
-A: Not currently. This would require a backend service with authentication (e.g., Auth0, Supabase, or a custom backend).
-
-**Q: Why no tests?**
-A: This project was built as a learning exercise. Tests are planned for future iterations.
-
-**Q: How do I get my own RAWG API key?**
-A: Register at [rawg.io/apidocs](https://rawg.io/apidocs) and request a free API key.
+- [ ] Add unit and integration testing suite (Vitest + React Testing Library)
+- [ ] Implement backend proxy for API key shielding
+- [ ] Add dark/light mode preference persistence
 
 ---
 
 ## License
 
-> ⚠️ **Not specified.** No license file exists in this repository.
-
----
-
-## Acknowledgements
-
-- **RAWG** — For providing the comprehensive video games database API
-- **Code with Mosh** — For the project inspiration and guided architecture
-- **Chakra UI Team** — For the accessible, themeable component library
-- **Tanner Linsley (TanStack)** — For React Query, which simplifies server state management
-- All open-source maintainers whose libraries make this project possible
-
----
-
-<p align="center">
-  <sub>Built with React, TypeScript, and ❤️</sub>
-</p>
+This project is open source under the [MIT License](LICENSE).
